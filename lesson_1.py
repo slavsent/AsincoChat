@@ -1,8 +1,10 @@
 import subprocess
 import locale
-
+import chardet
 
 # Задание 1
+from chardet import UniversalDetector
+
 word_1 = 'разработка'
 word_2 = 'сокет'
 word_3 = 'декоратор'
@@ -40,33 +42,49 @@ type: <class 'bytes'>, word: b'method', len: 6
 """
 
 # Задание 3
-bytes_w_1 = b'attribute'
-#bytes_w_2 = b'класс'
-#bytes_w_3 = b'функция'
-bytes_w_4 = b'type'
-print(f'type: {type(bytes_w_1)}, word: {bytes_w_1}, len: {len(bytes_w_1)}')
-#print(f'type: {type(bytes_w_2)}, word: {bytes_w_2}, len: {len(bytes_w_2)}')
-#print(f'type: {type(bytes_w_3)}, word: {bytes_w_3}, len: {len(bytes_w_3)}')
-print(f'type: {type(bytes_w_4)}, word: {bytes_w_4}, len: {len(bytes_w_4)}')
+# bytes_w_1 = b'attribute'
+# bytes_w_2 = b'класс'
+# bytes_w_3 = b'функция'
+# bytes_w_4 = b'type'
+# print(f'type: {type(bytes_w_1)}, word: {bytes_w_1}, len: {len(bytes_w_1)}')
+# print(f'type: {type(bytes_w_2)}, word: {bytes_w_2}, len: {len(bytes_w_2)}')
+# print(f'type: {type(bytes_w_3)}, word: {bytes_w_3}, len: {len(bytes_w_3)}')
+# print(f'type: {type(bytes_w_4)}, word: {bytes_w_4}, len: {len(bytes_w_4)}')
+words = ['attribute', 'класс', 'функция', 'type']
+for word in words:
+    try:
+        print(f'type: {type(bytes(word, "ascii"))}, word: {bytes(word, "ascii")}, len: {len(bytes(word, "ascii"))}')
+    except UnicodeEncodeError:
+        print(f'Слово "{word}" невозможно записать в виде байтовой строки')
 # result
 """
+old
 Невозможно записать в байтовом типе слова на кириллице
 SyntaxError: bytes can only contain ASCII literal characters
+new
+type: <class 'bytes'>, word: b'attribute', len: 9
+Слово "класс" невозможно записать в виде байтовой строки
+Слово "функция" невозможно записать в виде байтовой строки
+type: <class 'bytes'>, word: b'type', len: 4
 """
 
 # Задание 4
-word_1 = 'разработка'
-word_2 = 'администрирование'
-word_3 = 'protocol'
-word_4 = 'standard'
-word_1_b = word_1.encode('utf-8')
-word_2_b = word_2.encode('utf-8')
-word_3_b = word_3.encode('utf-8')
-word_4_b = word_4.encode('utf-8')
-print(f'encode: {word_1_b}, decode: {word_1_b.decode("utf-8")}')
-print(f'encode: {word_2_b}, decode: {word_2_b.decode("utf-8")}')
-print(f'encode: {word_3_b}, decode: {word_3_b.decode("utf-8")}')
-print(f'encode: {word_4_b}, decode: {word_4_b.decode("utf-8")}')
+# word_1 = 'разработка'
+# word_2 = 'администрирование'
+# word_3 = 'protocol'
+# word_4 = 'standard'
+# word_1_b = word_1.encode('utf-8')
+# word_2_b = word_2.encode('utf-8')
+# word_3_b = word_3.encode('utf-8')
+# word_4_b = word_4.encode('utf-8')
+# print(f'encode: {word_1_b}, decode: {word_1_b.decode("utf-8")}')
+# print(f'encode: {word_2_b}, decode: {word_2_b.decode("utf-8")}')
+# print(f'encode: {word_3_b}, decode: {word_3_b.decode("utf-8")}')
+# print(f'encode: {word_4_b}, decode: {word_4_b.decode("utf-8")}')
+words = ['разработка', 'администрирование', 'protocol', 'standard']
+for word in words:
+    word_b = word.encode('utf-8')
+    print(f'encode: {word_b}, decode: {word_b.decode("utf-8")}')
 # result
 """
 encode: b'\xd1\x80\xd0\xb0\xd0\xb7\xd1\x80\xd0\xb0\xd0\xb1\xd0\xbe\xd1\x82\xd0\xba\xd0\xb0', decode: разработка
@@ -85,20 +103,34 @@ subproc_ping_4 = subprocess.Popen(args_2, stdout=subprocess.PIPE)
 
 print('ping yandex.ru bytes')
 for line in subproc_ping_1.stdout:
-    print(f'bytes: {line}')
+    result_line = chardet.detect(line)
+    print(result_line)
+    line = line.decode(result_line['encoding']).encode('utf-8')
+    print(f'bytes: {line.decode("utf-8")}')
+
 print('ping youtube.com bytes')
 for line in subproc_ping_2.stdout:
-    print(f'bytes: {line}')
+    result_line = chardet.detect(line)
+    print(result_line)
+    line = line.decode(result_line['encoding']).encode('utf-8')
+    print(f'bytes: {line.decode("utf-8")}')
+
 print('ping yandex.ru decode')
 for line in subproc_ping_3.stdout:
-    line = line.decode('cp866')
-    print(f'bytes: {line}')
+    result_line = chardet.detect(line)
+    print(result_line)
+    line = line.decode(result_line['encoding']).encode('utf-8')
+    print(f'bytes: {line.decode("utf-8")}')
+
 print('ping youtube.com decode')
 for line in subproc_ping_4.stdout:
-    line = line.decode('cp866')
-    print(f'bytes: {line}')
+    result_line = chardet.detect(line)
+    print(result_line)
+    line = line.decode(result_line['encoding']).encode('utf-8')
+    print(f'bytes: {line.decode("utf-8")}')
 # result
 """
+old
 ping yandex.ru bytes
 bytes: b'\r\n'
 bytes: b'\x8e\xa1\xac\xa5\xad \xaf\xa0\xaa\xa5\xe2\xa0\xac\xa8 \xe1 yandex.ru [5.255.255.77] \xe1 32 \xa1\xa0\xa9\xe2\xa0\xac\xa8 \xa4\xa0\xad\xad\xeb\xe5:\r\n'
@@ -174,9 +206,158 @@ bytes:     (0% потерь)
 bytes: Приблизительное время приема-передачи в мс:
 
 bytes:     Минимальное = 19мсек, Максимальное = 23 мсек, Среднее = 20 мсек
+
+new
+ping yandex.ru bytes
+{'encoding': 'ascii', 'confidence': 1.0, 'language': ''}
+bytes: 
+
+{'encoding': 'IBM866', 'confidence': 0.9541442020007984, 'language': 'Russian'}
+bytes: Обмен пакетами с yandex.ru [5.255.255.77] с 32 байтами данных:
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 5.255.255.77: число байт=32 время=9мс TTL=54
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 5.255.255.77: число байт=32 время=8мс TTL=54
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 5.255.255.77: число байт=32 время=9мс TTL=54
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 5.255.255.77: число байт=32 время=10мс TTL=54
+
+{'encoding': 'ascii', 'confidence': 1.0, 'language': ''}
+bytes: 
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes: Статистика Ping для 5.255.255.77:
+
+{'encoding': 'IBM866', 'confidence': 0.9709962022043449, 'language': 'Russian'}
+bytes:     Пакетов: отправлено = 4, получено = 4, потеряно = 0
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes:     (0% потерь)
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes: Приблизительное время приема-передачи в мс:
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes:     Минимальное = 8мсек, Максимальное = 10 мсек, Среднее = 9 мсек
+
+ping youtube.com bytes
+{'encoding': 'ascii', 'confidence': 1.0, 'language': ''}
+bytes: 
+
+{'encoding': 'IBM866', 'confidence': 0.9541442020007984, 'language': 'Russian'}
+bytes: Обмен пакетами с youtube.com [64.233.162.136] с 32 байтами данных:
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 64.233.162.136: число байт=32 время=25мс TTL=60
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 64.233.162.136: число байт=32 время=22мс TTL=60
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 64.233.162.136: число байт=32 время=23мс TTL=60
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 64.233.162.136: число байт=32 время=30мс TTL=60
+
+{'encoding': 'ascii', 'confidence': 1.0, 'language': ''}
+bytes: 
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes: Статистика Ping для 64.233.162.136:
+
+{'encoding': 'IBM866', 'confidence': 0.9709962022043449, 'language': 'Russian'}
+bytes:     Пакетов: отправлено = 4, получено = 4, потеряно = 0
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes:     (0% потерь)
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes: Приблизительное время приема-передачи в мс:
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes:     Минимальное = 22мсек, Максимальное = 30 мсек, Среднее = 25 мсек
+
+ping yandex.ru decode
+{'encoding': 'ascii', 'confidence': 1.0, 'language': ''}
+bytes: 
+
+{'encoding': 'IBM866', 'confidence': 0.9541442020007984, 'language': 'Russian'}
+bytes: Обмен пакетами с yandex.ru [5.255.255.77] с 32 байтами данных:
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 5.255.255.77: число байт=32 время=7мс TTL=54
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 5.255.255.77: число байт=32 время=7мс TTL=54
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 5.255.255.77: число байт=32 время=8мс TTL=54
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 5.255.255.77: число байт=32 время=10мс TTL=54
+
+{'encoding': 'ascii', 'confidence': 1.0, 'language': ''}
+bytes: 
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes: Статистика Ping для 5.255.255.77:
+
+{'encoding': 'IBM866', 'confidence': 0.9709962022043449, 'language': 'Russian'}
+bytes:     Пакетов: отправлено = 4, получено = 4, потеряно = 0
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes:     (0% потерь)
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes: Приблизительное время приема-передачи в мс:
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes:     Минимальное = 7мсек, Максимальное = 10 мсек, Среднее = 8 мсек
+
+ping youtube.com decode
+{'encoding': 'ascii', 'confidence': 1.0, 'language': ''}
+bytes: 
+
+{'encoding': 'IBM866', 'confidence': 0.9541442020007984, 'language': 'Russian'}
+bytes: Обмен пакетами с youtube.com [64.233.162.136] с 32 байтами данных:
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 64.233.162.136: число байт=32 время=22мс TTL=60
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 64.233.162.136: число байт=32 время=21мс TTL=60
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 64.233.162.136: число байт=32 время=22мс TTL=60
+
+{'encoding': 'IBM866', 'confidence': 0.9787849417942194, 'language': 'Russian'}
+bytes: Ответ от 64.233.162.136: число байт=32 время=23мс TTL=60
+
+{'encoding': 'ascii', 'confidence': 1.0, 'language': ''}
+bytes: 
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes: Статистика Ping для 64.233.162.136:
+
+{'encoding': 'IBM866', 'confidence': 0.9709962022043449, 'language': 'Russian'}
+bytes:     Пакетов: отправлено = 4, получено = 4, потеряно = 0
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes:     (0% потерь)
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes: Приблизительное время приема-передачи в мс:
+
+{'encoding': 'IBM866', 'confidence': 0.99, 'language': 'Russian'}
+bytes:     Минимальное = 21мсек, Максимальное = 23 мсек, Среднее = 22 мсек
 """
 
-# Задание 5
+# Задание 6
 
 def_coding = locale.getpreferredencoding()
 print(f'кодировка по умолчанию: {def_coding}')
@@ -198,6 +379,35 @@ with open('test_file.txt', encoding='utf-8') as file:
 СЃРѕРєРµС‚
 РґРµРєРѕСЂР°С‚РѕСЂ
  file open utf-8
+сетевое программирование
+сокет
+декоратор
+"""
+
+# Задание 6 вариант 2
+words = ['сетевое программирование', 'сокет', 'декоратор']
+with open('test.txt', 'w') as file:
+    for line in words:
+        file.write(f'{line}\n')
+file.close()
+
+detect_decoder = UniversalDetector()
+with open('test.txt', 'rb') as test_file:
+    for i in test_file:
+        detect_decoder.feed(i)
+        if detect_decoder.done:
+            break
+    detect_decoder.close()
+print('\n', f'Кодировка файла - {detect_decoder.result["encoding"]}')
+
+print('Содержимое файла:')
+with open('test.txt', 'r', encoding=detect_decoder.result['encoding']) as file:
+    text_content = file.read()
+print(text_content)
+# result
+"""
+ Кодировка файла - windows-1251
+Содержимое файла:
 сетевое программирование
 сокет
 декоратор
