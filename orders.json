@@ -1,0 +1,25 @@
+{
+    "orders": [
+        {
+            "item": "printer",
+            "quantity": 1,
+            "price": 23.5,
+            "buyer": "takscom",
+            "date": "24/01/23"
+        },
+        {
+            "item": "сканер",
+            "quantity": 3,
+            "price": 40.5,
+            "buyer": "Ростелеком",
+            "date": "24/01/23"
+        },
+        {
+            "item": "тонер",
+            "quantity": 2,
+            "price": 5.2,
+            "buyer": "Ростелеком",
+            "date": "2023-04-04 11:57:36.602840"
+        }
+    ]
+}
