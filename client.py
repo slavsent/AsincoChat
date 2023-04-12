@@ -5,6 +5,19 @@ import datetime
 import sys
 
 
+def create_msg_for_server(msg):
+    return {
+        'action': 'presence',
+        'time': datetime.datetime.now().timestamp(),
+        'encoding': 'utf-8',
+        'message': msg,
+        'user': {
+            "account_name": "Guest",
+            "status": "I ok!"
+        }
+    }
+
+
 def main():
     try:
         serv_addr = str(sys.argv[1])
@@ -50,16 +63,7 @@ def main():
     while True:
 
         msg = str(input('Введите сообщение серверу: '))
-        data_msg = {
-            'action': 'presence',
-            'time': datetime.datetime.now().timestamp(),
-            'encoding': 'utf-8',
-            'message': msg,
-            'user': {
-                "account_name": "Guest",
-                "status": "I ok!"
-            }
-        }
+        data_msg = create_msg_for_server(msg)
         msg_jim = json.dumps(data_msg)
 
         s.send(msg_jim.encode('utf-8'))

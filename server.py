@@ -5,6 +5,27 @@ import sys
 import re
 
 
+def create_msg_to_client(msg_from_client):
+    if msg_from_client['message'] == 'Error':
+        return {
+            "response": 400,
+            "message": "Bad Request",
+            'time': datetime.datetime.now().timestamp(),
+        }
+    elif msg_from_client['action'] == 'presence':
+        return {
+            "response": 200,
+            "message": f"Привет клиент: {msg_from_client['user']['account_name']}",
+            'time': datetime.datetime.now().timestamp(),
+        }
+    else:
+        return {
+            "response": 200,
+            "message": "Wait action",
+            'time': datetime.datetime.now().timestamp(),
+        }
+
+
 def main():
     try:
         if '-p' in sys.argv:
@@ -66,24 +87,7 @@ def main():
         print(data_jim)
 
         print(f'Сообщение от клиента: {data_from_client["message"]}, время: {data_from_client["time"]}')
-        if data_from_client['message'] == 'Error':
-            data_msg = {
-                "response": 400,
-                "message": "Bad Request",
-                'time': datetime.datetime.now().timestamp(),
-            }
-        elif data_from_client['action'] == 'presence':
-            data_msg = {
-                "response": 200,
-                "message": f"Привет клиент: {data_from_client['user']['account_name']}",
-                'time': datetime.datetime.now().timestamp(),
-            }
-        else:
-            data_msg = {
-                "response": 200,
-                "message": "Wait action",
-                'time': datetime.datetime.now().timestamp(),
-            }
+        data_msg = create_msg_to_client(data_from_client)
         msg_jim = json.dumps(data_msg)
 
         client.send(msg_jim.encode('utf-8'))
