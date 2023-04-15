@@ -76,7 +76,7 @@ def main():
         serv_addr = ''
 
     s = socket(AF_INET, SOCK_STREAM)
-    server_logger.info('Создан socet для соединения')
+    server_logger.info('Создан socket для соединения')
     s.bind((serv_addr, serv_port))
     s.listen(5)
     server_logger.info('Прослушивание адреса для соединения')
