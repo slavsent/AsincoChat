@@ -8,7 +8,7 @@ from log.client_log_config import client_logger
 
 
 def create_msg_for_server(msg):
-    client_logger.debug(f'Сформировано presence сообщение по сообщению: {msg}')
+    client_logger.debug(f'Сформировано presence сообщение по сообщению клиента: {msg}')
     return {
         'action': 'presence',
         'time': datetime.datetime.now().timestamp(),
@@ -42,7 +42,7 @@ def main():
         serv_port = 7777
     else:
         try:
-            client_logger.info('роверка на наличие параметра ввода port при инициализации')
+            client_logger.info('Проверка на наличие параметра ввода port при инициализации')
             serv_port = int(sys.argv[2])
             if serv_port < 1024 or serv_port > 65535:
                 raise ValueError
@@ -63,7 +63,7 @@ def main():
             serv_port = 7777
 
     s = socket(AF_INET, SOCK_STREAM)
-    client_logger.info('Создан socet для соединения')
+    client_logger.info('Создан socket для соединения')
 
     try:
         s.connect((serv_addr, serv_port))
