@@ -5,8 +5,10 @@ import datetime
 import sys
 import logging
 from log.client_log_config import client_logger
+from decorate import Log
 
 
+@Log()
 def create_msg_for_server(msg):
     client_logger.debug(f'Сформировано presence сообщение по сообщению клиента: {msg}')
     return {

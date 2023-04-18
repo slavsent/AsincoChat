@@ -5,8 +5,10 @@ import sys
 import re
 import logging
 from log.server_log_config import server_logger
+from decorate import Log
 
 
+@Log()
 def create_msg_to_client(msg_from_client):
     if msg_from_client['message'] == 'Error':
         server_logger.debug('Сформирован ответ с - Bad Request')
