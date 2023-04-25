@@ -10,7 +10,7 @@ from decorate import Log
 
 
 @Log()
-def create_msg_to_client(msg_from_client):
+def create_msg_to_client(msg_from_client, username, clients, client):
     if msg_from_client['message'] == 'Error':
         server_logger.debug('Сформирован ответ с - Bad Request')
         return {
@@ -18,13 +18,42 @@ def create_msg_to_client(msg_from_client):
             "message": "Bad Request",
             'time': datetime.datetime.now().timestamp(),
         }
-    elif msg_from_client['action'] == 'presence':
+    if 'user' in msg_from_client and 'action' in msg_from_client and msg_from_client['action'] == 'presence':
+        if msg_from_client['user']['account_name'] in username.keys():
+            return {
+                "response": 400,
+                'user': 'error',
+                "message": f"Привет клиент: {msg_from_client['user']['account_name']} такой username уже существует",
+                'time': datetime.datetime.now().timestamp(),
+            }
+        else:
+            username[msg_from_client['user']['account_name']] = client
+    if msg_from_client['action'] == 'presence':
         server_logger.debug('Сформирован ответ на сообщение - presence')
         return {
             "response": 200,
             "message": f"Привет клиент: {msg_from_client['user']['account_name']}",
             'time': datetime.datetime.now().timestamp(),
         }
+    elif msg_from_client['action'] == 'message' and 'user_to' in msg_from_client and 'user' in msg_from_client:
+        if msg_from_client['user_to'] in username.keys():
+            return {
+                "action": 'message',
+                'user_from': msg_from_client['user']['account_name'],
+                'user_to': msg_from_client['user_to'],
+                "message": msg_from_client['message'],
+                'time': datetime.datetime.now().timestamp(),
+            }
+        return {
+            "response": 400,
+            "message": f"Привет клиент: {msg_from_client['user']['account_name']}. Такого получателя нет",
+            'time': datetime.datetime.now().timestamp(),
+        }
+    elif 'action' in msg_from_client and msg_from_client['action'] == 'exit' and 'user' in msg_from_client:
+        clients.remove(username[msg_from_client['user']['account_name']])
+        username[msg_from_client['user']['account_name']].close()
+        del username[msg_from_client['user']['account_name']]
+        return {'response': 'close'}
     else:
         server_logger.debug('Сформирован ответ на прочие сообщения чем presence и error')
         return {
@@ -95,9 +124,7 @@ def get_message(client):
             "message": 'Error',
             "time": 'Error'
         }
-        return data_from_client
-    else:
-        return data_from_client
+    return data_from_client
 
 
 def main():
@@ -110,6 +137,8 @@ def main():
 
     clients = []
     messages = []
+
+    username = {}
 
     s.listen(5)
     server_logger.info('Прослушивание адреса для соединения')
@@ -124,47 +153,46 @@ def main():
             server_logger.info(f'Установлено соедение с клиентом {addr}')
             clients.append(client)
 
-        finally:
-            wait = 10
-            receive_data, send_data, err_data = [], [], []
-            try:
-                if clients:
-                    receive_data, send_data, err_data = select.select(clients, clients, [], wait)
-            except OSError:
-                pass
+        wait = 10
+        receive_data, send_data, err_data = [], [], []
+        try:
+            if clients:
+                receive_data, send_data, err_data = select.select(clients, clients, [], wait)
+        except OSError:
+            pass
 
-            if receive_data:
-                for client_with_message in receive_data:
-                    try:
-                        data_from_client = get_message(client_with_message)
-                        print(f'Сообщение от клиента: {data_from_client["message"]}, время: {data_from_client["time"]}')
-                        server_logger.info(f'Просмотр сообщения от клиента - {data_from_client["message"]}')
-                        if data_from_client["message"] != "Error":
-                            messages.append((data_from_client['user']['account_name'], data_from_client["message"]))
-                        data_msg = create_msg_to_client(data_from_client)
-                        msg_jim = json.dumps(data_msg)
-                        server_logger.debug('Сообщение отправлено клиенту ответ')
-                        client_with_message.send(msg_jim.encode('utf-8'))
-                    except:
-                        server_logger.info(f'Клиент {client_with_message.getpeername()} отключился от сервера.')
-                        clients.remove(client_with_message)
+        if receive_data:
+            for client_with_message in receive_data:
+                try:
+                    data_from_client = get_message(client_with_message)
+                    print(f'Сообщение от клиента: {data_from_client["message"]}, время: {data_from_client["time"]}')
+                    server_logger.info(f'Просмотр сообщения от клиента - {data_from_client["message"]}')
+                    data_msg = create_msg_to_client(data_from_client, username, clients, client_with_message)
+                    if 'response' not in data_msg or data_msg['response'] != 'close':
+                        if 'action' in data_msg and data_msg['action'] == 'message':
+                            messages.append(data_msg)
+                        else:
+                            msg_jim = json.dumps(data_msg)
+                            server_logger.debug('Сообщение отправлено клиенту ответ')
+                            client_with_message.send(msg_jim.encode('utf-8'))
+                            if 'user' in data_msg and data_msg['user'] == 'error':
+                                clients.remove(client_with_message)
+                except Exception:
+                    server_logger.info(f'Клиент {client_with_message.getpeername()} отключился от сервера.')
+                    clients.remove(client_with_message)
 
-            if messages and send_data:
-                message = {
-                    "action": 'message',
-                    "sender": messages[0][0],
-                    'time': datetime.datetime.now().timestamp(),
-                    "message": messages[0][1],
-                }
-                del messages[0]
-                for waiting_client in send_data:
-                    try:
-                        msg_jim = json.dumps(message)
-                        waiting_client.send(msg_jim.encode('utf-8'))
-                        server_logger.debug('Сообщение отправлено клиенту рассылка')
-                    except:
-                        server_logger.info(f'Клиент {waiting_client.getpeername()} отключился от сервера.')
-                        clients.remove(waiting_client)
+        if messages:
+            for message in messages:
+                try:
+                    msg_jim = json.dumps(message)
+                    server_logger.debug(
+                        f'Сообщение отправлено клиенту {message["user_to"]} от клиента {message["user_from"]}')
+                    username[message['user_to']].send(msg_jim.encode('utf-8'))
+                except:
+                    server_logger.info(f'Клиент {username[message["user_to"]].getpeername()} отключился от сервера.')
+                    clients.remove(username[message['user_to']])
+                    del username[message['user_to']]
+            messages.clear()
 
 
 if __name__ == '__main__':
