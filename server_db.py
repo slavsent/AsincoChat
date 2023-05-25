@@ -59,7 +59,21 @@ class ContactList(BASE):
         return f'login: {self.id} {self.user_id} {self.ip_address} {self.port} {self.login_date}'
 
 
-class ServerStorage():
+class UserContacts(BASE):
+    __tablename__ = 'user_contacts'
+    id = Column(Integer, primary_key=True)
+    user = Column(String(50))
+    contact = Column(String(50))
+
+    def __init__(self, user: int, contact: int):
+        self.user = user
+        self.contact = contact
+
+    def __repr__(self):
+        return f'Контакты: {self.id} {self.user} {self.contact}'
+
+
+class ServerStorage:
     def __init__(self):
         self.engine = create_engine('sqlite:///server_db.db3', echo=False, pool_recycle=7200)
         BASE.metadata.create_all(self.engine)
@@ -81,7 +95,7 @@ class ServerStorage():
         :param port: port пользователя
         :return: внесение в бд информации о логинах пользователя
         """
-        print(username, ip_address, port)
+        # print(username, ip_address, port)
         # Запрос в таблицу пользователей на наличие там пользователя с таким именем
         rez = self.session.query(Users).filter_by(login=username)
         # Если имя пользователя уже присутствует в таблице, обновляем время последнего входа
@@ -118,9 +132,10 @@ class ServerStorage():
 
         # Удаляем его из таблицы активных пользователей.
         # Удаляем запись из таблицы ClientHistory
-        self.session.query(ClientHistory).filter_by(user_id=user.id).delete()
+        if user:
+            self.session.query(ClientHistory).filter_by(user_id=user.id).delete()
 
-        self.session.commit()
+            self.session.commit()
 
     def users_list(self, printable=None):
         """
@@ -179,6 +194,48 @@ class ServerStorage():
 
         self.session.commit()
 
+    def add_user_contacts(self, user, contact):
+        """
+        Функция добавляет контакт для определенного пользователя
+        :param user: пользователь
+        :param contact: контакт
+        :return:
+        """
+        rez = self.session.query(UserContacts).filter_by(user=user, contact=contact)
+        if rez.count() < 1:
+            contact_new = UserContacts(user, contact)
+            self.session.add(contact_new)
+            self.session.commit()
+
+    def user_contacts(self, username):
+        """
+        Функция возвращает список контактов определенного пользователя
+        :param username:
+        :return:
+        """
+        query = self.session.query(UserContacts.user, UserContacts.contact, )
+        if username:
+            query = query.filter(UserContacts.user == username)
+        rez = []
+        if query:
+
+            for contact in query:
+                rez.append(contact[1])
+        return rez
+
+    def del_user_contacts(self, user, contact):
+        """
+        Функция добавляет контакт для определенного пользователя
+        :param user: пользователь
+        :param contact: контакт
+        :return:
+        """
+        rez = self.session.query(UserContacts).filter_by(user=user, contact=contact).first()
+        if rez:
+            self.session.query(UserContacts).filter_by(user=user, contact=contact).delete()
+
+            self.session.commit()
+
 
 # Отладка
 if __name__ == '__main__':
@@ -207,3 +264,10 @@ if __name__ == '__main__':
     test_db.users_list(1)
     test_db.user_delete('sergo')
     test_db.users_list(1)
+
+    test_db.add_user_contacts('sen', 'tuk')
+    test_db.add_user_contacts('sen', 'test')
+    print('yes', test_db.user_contacts('sen'))
+    print('no', test_db.user_contacts('tuk'))
+    test_db.del_user_contacts('sen', 'test')
+    print('yes', test_db.user_contacts('sen'))

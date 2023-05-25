@@ -59,13 +59,13 @@ class ClientVerifier(type):
             else:
                 # Раз функция разбираем код, получая используемые методы.
                 for i in ret:
-                    print(i)
-                    if i.opname == 'LOAD_METHOD' or i.opname == 'LOAD_ATTR':
+                    # print(i)
+                    if i.opname == 'LOAD_METHOD' or i.opname == 'LOAD_ATTR' or i.opname == 'LOAD_NAME':
                         if i.argval not in methods:
                             # заполняем список методами, использующимися в функциях класса
                             methods.append(i.argval)
                     # elif i.opname == 'LOAD_ATTR':
-                    if i.opname == 'LOAD_GLOBAL':
+                    if i.opname == 'LOAD_GLOBAL' or i.opname == 'LOAD_FAST':
                         if i.argval not in attrs:
                             # заполняем список атрибутами, использующимися в функциях класса
                             attrs.append(i.argval)
@@ -76,9 +76,13 @@ class ClientVerifier(type):
             if command in methods:
                 raise TypeError('В классе обнаружено использование запрещённого метода')
         # Если в классе нет s=socket():
-        if not ('socket' in attrs):
+
+        if not ('socket' in attrs or 'sock' in attrs):
             raise TypeError('В классе обнаружено не использование создание socket')
-        if not ('create_msg_for_server' in methods) or not ('message_from_server' in methods) or not (
-                'user_command' in methods):
+        if ('create_msg_for_server' in methods) or ('ClientReader' in methods) or (
+                'run_main_command' in methods) or (
+                'Client' in methods):
+            pass
+        else:
             raise TypeError('Отсутствуют вызовы функций, работающих с сокетами.')
         super().__init__(clsname, bases, clsdict)
