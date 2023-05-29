@@ -66,7 +66,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
                 'alert': 'Ok, delete'
             }
         if 'action' in msg_from_client and msg_from_client['action'] == 'add_contacts':
-            self.db.del_user_contacts(msg_from_client['user_login'], msg_from_client['contact_name'])
+            self.db.add_user_contacts(msg_from_client['user_login'], msg_from_client['contact_name'])
             return {
                 "response": 202,
                 'alert': 'Ok, add'
@@ -216,6 +216,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
                         new_connection = True
                         if user:
                             self.db.user_logout(user)
+                            del username[user]
                         clients.remove(client_with_message)
 
             if messages:

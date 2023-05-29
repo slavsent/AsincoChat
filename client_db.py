@@ -155,6 +155,15 @@ class ClientStorage:
         :return: список сообщений
         """
         query = self.session.query(MessageHistory)
+        if from_who and to_who:
+            query_to = query.filter_by(from_user=from_who)
+            query_from = query.filter_by(to_user=to_who)
+            return [
+                (history_message.from_user, history_message.to_user, history_message.message,
+                 history_message.date_message)
+                for history_message in query_to.all()] + [
+            (history_message.from_user, history_message.to_user, history_message.message, history_message.date_message)
+            for history_message in query_from.all()]
         if from_who:
             query = query.filter_by(from_user=from_who)
         if to_who:
