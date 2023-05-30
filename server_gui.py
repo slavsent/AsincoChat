@@ -4,6 +4,8 @@ from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QLabel, QT
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt
 import os
+from server_utilit.reg_user import RegisterUser
+from server_utilit.del_user import DelUserDialog
 
 
 # GUI - Создание таблицы QModel, для отображения в окне программы.
@@ -89,6 +91,12 @@ class MainWindow(QMainWindow):
         # Кнопка настроек сервера
         self.config_btn = QAction('Настройки сервера', self)
 
+        # Кнопка регистрации пользователя
+        self.register_btn = QAction('Регистрация пользователя', self)
+
+        # Кнопка удаления пользователя
+        self.remove_btn = QAction('Удаление пользователя', self)
+
         # Кнопка вывести историю сообщений
         self.show_history_button = QAction('История клиентов', self)
 
@@ -105,10 +113,12 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.refresh_button)
         self.toolbar.addAction(self.show_history_button)
         self.toolbar.addAction(self.config_btn)
+        self.toolbar.addAction(self.register_btn)
+        self.toolbar.addAction(self.remove_btn)
         self.toolbar.addAction(self.show_users_button)
 
         # Настройки геометрии основного окна
-        self.setFixedSize(500, 400)
+        self.setFixedSize(800, 400)
         self.setWindowTitle('Информационное окно сервера')
 
         # Надпись о том, что ниже список подключённых клиентов
@@ -119,7 +129,7 @@ class MainWindow(QMainWindow):
         # Окно со списком подключённых клиентов.
         self.active_clients_table = QTableView(self)
         self.active_clients_table.move(10, 45)
-        self.active_clients_table.setFixedSize(480, 320)
+        self.active_clients_table.setFixedSize(780, 320)
 
         # Последним параметром отображаем окно.
         self.show()

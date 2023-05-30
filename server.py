@@ -294,7 +294,20 @@ def print_help():
 def main():
     serv_addr, serv_port = pars_ip_and_port()
 
-    db = ServerStorage()
+    # Загрузка файла конфигурации сервера
+    config = configparser.ConfigParser()
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    config.read(f"{dir_path}/{'server.ini'}")
+    if not config['SETTINGS']['database_path']:
+        config['SETTINGS']['database_path'] = dir_path
+        with open('server.ini', 'w') as conf:
+            config.write(conf)
+            print('Настройки изменены')
+
+    db = ServerStorage(os.path.join(
+            config['SETTINGS']['database_path'],
+            config['SETTINGS']['database_file']))
     # проверка работы класса на правильный порт
     # new_serv = Server(serv_addr, 123)
     new_serv = Server(serv_addr, serv_port, db)
@@ -302,21 +315,9 @@ def main():
     new_serv.start()
     # new_serv.main()
 
-
     # Создаём графическое окуружение для сервера:
     server_app = QApplication(sys.argv)
     main_window = MainWindow()
-
-    # Загрузка файла конфигурации сервера
-    config = configparser.ConfigParser()
-
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    config.read(f"{dir_path}/{'server.ini'}")
-    if not config['SETTINGS']['Database_path']:
-        config['SETTINGS']['Database_path'] = dir_path
-        with open('server.ini', 'w') as conf:
-            config.write(conf)
-            print('Настройки изменены')
 
     # Инициализируем параметры в окна
     main_window.statusBar().showMessage('Server Working')

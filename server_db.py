@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import create_engine, Column, Integer, String, MetaData, ForeignKey, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, MetaData, ForeignKey, DateTime, Text
 # from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -13,11 +13,15 @@ class Users(BASE):
     login = Column(String(50), unique=True)
     info = Column(String(100))
     last_login = Column(DateTime)
+    passwd = Column(String(256))
+    pubkey = Column(Text, )
 
-    def __init__(self, login: str, info='no info', last_login=datetime.datetime.now()):
+    def __init__(self, login: str, passwd, info='no info', last_login=datetime.datetime.now(), pubkey=None):
         self.login = login
         self.info = info
         self.last_login = last_login
+        self.passwd = passwd
+        self.pubkey = pubkey
 
     def __repr__(self):
         return f'Пользователь: id - {self.id} login - {self.login} доп. информация: {self.info}, дата и время последнего логина: {self.last_login}'
@@ -74,8 +78,9 @@ class UserContacts(BASE):
 
 
 class ServerStorage:
-    def __init__(self):
-        self.engine = create_engine('sqlite:///server_db.db3', echo=False, pool_recycle=7200)
+    def __init__(self, path):
+        self.engine = create_engine(f'sqlite:///{path}', echo=False, pool_recycle=7200,
+                                    connect_args={'check_same_thread': False})
         BASE.metadata.create_all(self.engine)
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         self.session = SessionLocal()
@@ -87,12 +92,13 @@ class ServerStorage:
         except Exception:
             pass
 
-    def user_login(self, username, ip_address, port):
+    def user_login(self, username, ip_address, port, key):
         """
         Функция выполняющяяся при входе пользователя, записывает в базу факт входа
         :param username: login пользователя
         :param ip_address: ip_address пользователя
         :param port: port пользователя
+        :param key: pubkey пользователя
         :return: внесение в бд информации о логинах пользователя
         """
         # print(username, ip_address, port)
@@ -102,12 +108,16 @@ class ServerStorage:
         if rez.count():
             user = rez.first()
             user.last_login = datetime.datetime.now()
+            if user.pubkey != key:
+                user.pubkey = key
         # Если нет, то создаздаём нового пользователя
         else:
+            raise ValueError('Пользователь не зарегистрирован.')
+            # old
             # Создаем экземпляр класса Users, через который передаем данные в таблицу
-            user = Users(username)
-            self.session.add(user)
-            self.session.commit()
+            # user = Users(username)
+            # self.session.add(user)
+            # self.session.commit()
 
         user = self.session.query(Users).filter_by(login=username).first()
         # Создаем экземпляр класса ClientHistory, через который передаем данные в таблицу
@@ -119,6 +129,36 @@ class ServerStorage:
         self.session.add(history)
 
         self.session.commit()
+
+    def add_user(self, name, passwd_hash):
+        """
+        Метод регистрации пользователя.
+        Принимает имя и хэш пароля, создаёт запись в таблице статистики.
+        :param name: логин
+        :param passwd_hash: хэш пароля
+        :return:
+        """
+        user_row = Users(name, passwd_hash)
+        self.session.add(user_row)
+        self.session.commit()
+
+    def get_hash(self, name):
+        """
+        Метод получения хэша пароля пользователя.
+        :param name: login
+        :return:
+        """
+        user = self.session.query(Users).filter_by(login=name).first()
+        return user.passwd
+
+    def get_pubkey(self, name):
+        """
+        Метод получения публичного ключа пользователя.
+        :param name: login
+        :return:
+        """
+        user = self.session.query(Users).filter_by(login=name).first()
+        return user.pubkey
 
     def user_logout(self, username):
         """
@@ -235,6 +275,13 @@ class ServerStorage:
             self.session.query(UserContacts).filter_by(user=user, contact=contact).delete()
 
             self.session.commit()
+
+    def check_user(self, name):
+        '''Метод проверяющий существование пользователя.'''
+        if self.session.query(Users).filter_by(login=name).count():
+            return True
+        else:
+            return False
 
 
 # Отладка
