@@ -3,6 +3,7 @@ from socket import *
 import json
 import datetime
 import sys
+import os
 import threading
 import time
 import logging
@@ -16,6 +17,7 @@ from Client.main_win import ClientMainWindow
 from Client.sendler import ClientTransport, ServerError
 from PyQt5.QtWidgets import QDialog, QPushButton, QLineEdit, QApplication, QLabel, qApp
 from PyQt5.QtCore import QEvent
+from Crypto.PublicKey import RSA
 
 
 @Log()
@@ -70,15 +72,32 @@ def main():
 
     # Если имя пользователя не было указано в командной строке то запросим его
     start_dialog = UserNameDialog()
+
     client_app.exec_()
     # Если пользователь ввёл имя и нажал ОК, то сохраняем ведённое и удаляем объект, инааче выходим
-    client_name = 'test1'
+    client_name = ''
+    client_passwd = ''
     if start_dialog.ok_pressed:
         client_name = start_dialog.client_name.text()
-        del start_dialog
+        client_passwd = start_dialog.client_passwd.text()
+        client_logger.debug(f'Using USERNAME = {client_name}, PASSWD = {client_passwd}.')
     else:
         exit(0)
     #print(client_name)
+
+    # Загружаем ключи с файла, если же файла нет, то генерируем новую пару.
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    key_file = os.path.join(dir_path, f'{client_name}.key')
+    if not os.path.exists(key_file):
+        keys = RSA.generate(2048, os.urandom)
+        with open(key_file, 'wb') as key:
+            key.write(keys.export_key())
+    else:
+        with open(key_file, 'rb') as key:
+            keys = RSA.import_key(key.read())
+
+    # !!!keys.publickey().export_key()
+    client_logger.debug("Keys sucsessfully loaded.")
 
     database = ClientStorage(client_name)
 
@@ -90,12 +109,14 @@ def main():
         print(error.text)
         exit(1)
     """
-    transport = ClientTransport(serv_port, serv_addr, database, client_name)
+    transport = ClientTransport(serv_port, serv_addr, database, client_name, client_passwd, keys)
     transport.daemon = True
     #transport.setDaemon(True)
     transport.start()
 
-    main_window = ClientMainWindow(database, transport)
+    del start_dialog
+
+    main_window = ClientMainWindow(database, transport, keys)
     main_window.make_connection(transport)
     main_window.setWindowTitle(f'Чат sents realise - {client_name}')
     client_app.exec_()

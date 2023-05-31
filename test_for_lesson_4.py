@@ -1,7 +1,7 @@
 import unittest
 import datetime
 from for_test import num_diapason, num_rules, num_float_one
-from server import create_msg_to_client
+from server_utilit import create_msg_to_client
 from client import create_msg_for_server
 
 

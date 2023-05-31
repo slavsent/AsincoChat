@@ -1,6 +1,6 @@
 import unittest
 import datetime
-from server import create_msg_to_client
+from server_utilit import create_msg_to_client
 
 
 class TestServer(unittest.TestCase):
