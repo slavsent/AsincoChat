@@ -12,7 +12,9 @@ else:
 
 
 class Log:
-
+    """
+    Класс создания лога для указания вызываемого модуля
+    """
     def __call__(self, func):
         def decorator(*args, **kwargs):
             res = func(*args, **kwargs)

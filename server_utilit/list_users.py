@@ -8,6 +8,9 @@ from PyQt5.QtCore import Qt
 
 # Класс окна с историей пользователей
 class UsersWindow(QDialog):
+    """
+    Класс списка существующих пользователей
+    """
     def __init__(self, database):
         super().__init__()
         self.database = database
@@ -32,6 +35,10 @@ class UsersWindow(QDialog):
         self.create_list_users()
 
     def create_list_users(self):
+        """
+        Получение существующих пользователей
+        :return:
+        """
         # Список записей из базы
         hist_list = self.database.users_list()
 

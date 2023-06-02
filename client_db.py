@@ -8,6 +8,9 @@ BASE = declarative_base()
 
 
 class Users(BASE):
+    """
+    Класс создания таблицы пользователей
+    """
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     username = Column(String(50))
@@ -20,6 +23,9 @@ class Users(BASE):
 
 
 class MessageHistory(BASE):
+    """
+    Класс истории сообщений пользователя
+    """
     __tablename__ = 'message_history'
     id = Column(Integer, primary_key=True)
     from_user = Column(String(50))
@@ -38,6 +44,9 @@ class MessageHistory(BASE):
 
 
 class Contacts(BASE):
+    """
+    Класс списка контактов пользователя
+    """
     __tablename__ = 'contacts'
     id = Column(Integer, primary_key=True)
     username = Column(String(50))
@@ -50,13 +59,28 @@ class Contacts(BASE):
 
 
 class ClientStorage:
+    """
+    Класс - оболочка для работы с базой данных клиента.
+    Использует SQLite базу данных, реализован с помощью
+    SQLAlchemy ORM и используется классический подход.
+    """
     def __init__(self, name_db):
+        # Создаём движок базы данных, поскольку разрешено несколько
+        # клиентов одновременно, каждый должен иметь свою БД
+        # Поскольку клиент мультипоточный необходимо отключить
+        # проверки на подключения с разных потоков,
+        # иначе sqlite3.ProgrammingError
         self.engine = create_engine(f'sqlite:///client_db_{name_db}.db3', echo=False, pool_recycle=7200,
                                     connect_args={'check_same_thread': False})
+        # Создаём объект MetaData
         BASE.metadata.create_all(self.engine)
+
+        # Создаём сессию
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         self.session = SessionLocal()
 
+        # Необходимо очистить таблицу контактов, т.к. при запуске они
+        # подгружаются с сервера.
         try:
             self.session.query(Contacts).delete()
             self.session.commit()

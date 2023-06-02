@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append('../')
 from socket import *
 import json
@@ -95,8 +96,8 @@ def main():
 
     # Инициализация базы данных
     db = ServerStorage(os.path.join(
-            config['SETTINGS']['Database_path'],
-            config['SETTINGS']['Database_file']))
+        config['SETTINGS']['Database_path'],
+        config['SETTINGS']['Database_file']))
 
     # проверка работы класса на правильный порт
     # new_serv = Server(serv_addr, 123)

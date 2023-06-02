@@ -25,7 +25,13 @@ from server_db import ServerStorage
 conflag_lock = threading.Lock()
 
 
-class ServerMesseger(threading.Thread, metaclass=ServerVerifier):
+# Основной класс сервера.
+class ServerMesseger(threading.Thread):
+    '''
+    Основной класс сервера. Принимает содинения, словари - пакеты
+    от клиентов, обрабатывает поступающие сообщения.
+    Работает в качестве отдельного потока.
+    '''
     serv_port = PortDescriptor()
 
     def __init__(self, serv_addr, serv_port, db):
@@ -42,6 +48,12 @@ class ServerMesseger(threading.Thread, metaclass=ServerVerifier):
     @Log()
     @login_required
     def create_msg_to_client(self, msg_from_client, client):
+        """
+        Создание ответа клиенту в зависимости от поступившего сообщения
+        :param msg_from_client: сообщение от клиента
+        :param client: клиент
+        :return: сообщение
+        """
         if 'message' in msg_from_client and msg_from_client['message'] == 'Error':
             server_logger.debug('Сформирован ответ с - Bad Request')
             return {
@@ -131,6 +143,11 @@ class ServerMesseger(threading.Thread, metaclass=ServerVerifier):
 
     @Log()
     def get_message(self, client):
+        """
+        Получение сообщения от клиента
+        :param client: клиент
+        :return: сообщение
+        """
         data = client.recv(1000000)
         server_logger.debug('Получение сообщения от клиента')
         try:
@@ -146,6 +163,11 @@ class ServerMesseger(threading.Thread, metaclass=ServerVerifier):
         return data_from_client
 
     def run(self):
+        """
+        Метод основной цикл потока.
+        :return:
+        """
+        # Инициализация Сокета
         s = socket(AF_INET, SOCK_STREAM)
         # проверка работы метакласса
         # s = socket()
