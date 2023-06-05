@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append('../')
 from socket import *
 import json
@@ -85,7 +86,8 @@ def main():
     # Загрузка файла конфигурации сервера
     config = configparser.ConfigParser()
 
-    dir_path = os.path.dirname(os.path.realpath(__file__))
+    # dir_path = os.path.dirname(os.path.realpath(__file__))
+    dir_path = os.getcwd()
     config.read(f"{dir_path}/{'server.ini'}")
     if not config['SETTINGS']['Database_path']:
         config['SETTINGS']['Database_path'] = dir_path
@@ -95,8 +97,8 @@ def main():
 
     # Инициализация базы данных
     db = ServerStorage(os.path.join(
-            config['SETTINGS']['Database_path'],
-            config['SETTINGS']['Database_file']))
+        config['SETTINGS']['Database_path'],
+        config['SETTINGS']['Database_file']))
 
     # проверка работы класса на правильный порт
     # new_serv = Server(serv_addr, 123)
