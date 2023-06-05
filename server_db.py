@@ -8,6 +8,9 @@ BASE = declarative_base()
 
 
 class Users(BASE):
+    """
+    Класс с существующими пользователями
+    """
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     login = Column(String(50), unique=True)
@@ -28,6 +31,9 @@ class Users(BASE):
 
 
 class ClientHistory(BASE):
+    """
+    Класс с активными подключениями клиентов
+    """
     __tablename__ = 'users_history'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), unique=True)
@@ -46,6 +52,9 @@ class ClientHistory(BASE):
 
 
 class ContactList(BASE):
+    """
+    Класс с историческими соединениями клиентов с сервером
+    """
     __tablename__ = 'contact_list'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'))
@@ -64,6 +73,9 @@ class ContactList(BASE):
 
 
 class UserContacts(BASE):
+    """
+    Класс контактов пользователя
+    """
     __tablename__ = 'user_contacts'
     id = Column(Integer, primary_key=True)
     user = Column(String(50))
@@ -78,14 +90,23 @@ class UserContacts(BASE):
 
 
 class ServerStorage:
+    """
+    Класс - оболочка для работы с базой данных сервера.
+    Использует SQLite базу данных, реализован с помощью
+    SQLAlchemy ORM и используется классический подход.
+    """
     def __init__(self, path):
+        # Создаём движок базы данных
         self.engine = create_engine(f'sqlite:///{path}', echo=False, pool_recycle=7200,
                                     connect_args={'check_same_thread': False})
+        # Создаём объект MetaData
         BASE.metadata.create_all(self.engine)
+        # Создаём сессию
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         self.session = SessionLocal()
         self.session.commit()
-
+        # Если в таблице активных пользователей есть записи, то их необходимо
+        # удалить
         try:
             self.session.query(ClientHistory).delete()
             self.session.commit()

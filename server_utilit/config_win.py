@@ -7,6 +7,9 @@ sys.path.append('../')
 
 # Класс окна настроек
 class ConfigWindow(QDialog):
+    """
+    Класс окно настроек.
+    """
     def __init__(self, config):
         super().__init__()
         self.config = config
@@ -33,9 +36,6 @@ class ConfigWindow(QDialog):
         # Кнопка выбора пути.
         self.db_path_select = QPushButton('Обзор...', self)
         self.db_path_select.move(275, 28)
-
-
-
 
         # Метка с именем поля файла базы данных
         self.db_file_label = QLabel('Имя файла базы данных: ', self)
@@ -93,6 +93,10 @@ class ConfigWindow(QDialog):
 
     # Функция обработчик открытия окна выбора папки
     def open_file_dialog(self):
+        """
+        Метод обработчик открытия окна выбора папки.
+        :return:
+        """
         global dialog
         dialog = QFileDialog(self)
         path = dialog.getExistingDirectory()

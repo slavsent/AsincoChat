@@ -14,9 +14,14 @@ from server_utilit.del_user import DelUserDialog
 
 # Класс основного окна
 class MainWindow(QMainWindow):
+    """
+    Класс - основное окно сервера.
+    """
     def __init__(self, database, server, config):
         super().__init__()
+        # База данных сервера
         self.database = database
+
         self.config = config
         self.server_thread = server
         # self.initUI()
@@ -90,6 +95,10 @@ class MainWindow(QMainWindow):
 
     # GUI - Создание таблицы QModel, для отображения в окне программы.
     def create_users_model(self):
+        """
+        Метод заполняющий таблицу активных пользователей.
+        :return:
+        """
         list_users = self.database.active_users_list()
         list = QStandardItemModel()
         list.setHorizontalHeaderLabels(['Имя Клиента', 'IP Адрес', 'Порт', 'Время подключения'])

@@ -4,6 +4,10 @@ from PyQt5.QtCore import QEvent
 
 # Стартовый диалог с выбором имени пользователя
 class UserNameDialog(QDialog):
+    """
+    Класс реализующий стартовый диалог с запросом логина и пароля
+    пользователя.
+    """
     def __init__(self):
         super().__init__()
 
@@ -41,6 +45,10 @@ class UserNameDialog(QDialog):
 
     # Обработчик кнопки ОК, если поле вводе не пустое, ставим флаг и завершаем приложение.
     def click(self):
+        """
+        Метод обрабтчик кнопки ОК.
+        :return:
+        """
         if self.client_name.text() and self.client_passwd.text():
             self.ok_pressed = True
             qApp.exit()

@@ -7,17 +7,18 @@ import os
 import threading
 import time
 import logging
-sys.path.append('../')
-from log.client_log_config import client_logger
-from decorate import Log
-from metaclasses import ClientVerifier
-from client_db import ClientStorage
-from Client.start_user import UserNameDialog
-from Client.main_win import ClientMainWindow
-from Client.sendler import ClientTransport, ServerError
 from PyQt5.QtWidgets import QDialog, QPushButton, QLineEdit, QApplication, QLabel, qApp
 from PyQt5.QtCore import QEvent
 from Crypto.PublicKey import RSA
+from metaclasses import ClientVerifier
+
+sys.path.append('../')
+from client_db import ClientStorage
+from Client.start_user import UserNameDialog
+from Client.main_win import ClientMainWindow
+from Client.sendler import ClientTransport
+from decorate import Log
+from log.client_log_config import client_logger
 
 
 # Парсер аргументов коммандной строки
@@ -41,7 +42,7 @@ def arg_parser():
         serv_addr = '127.0.0.1'
         serv_port = 7777
     except ValueError:
-        #client_logger.critical(
+        # client_logger.critical(
         #    f'Введен не верный адрес {sys.argv[1]}. '
         #    'Адрес может быть только вида и в диапазоне от 0.0.0.0 до 999.999.999.999 '
         #    'Поэтому присвоен адрес и порт по умолчанию')
@@ -49,21 +50,21 @@ def arg_parser():
         serv_port = 7777
 
     try:
-        #client_logger.info('Проверка на наличие параметра ввода port при инициализации')
+        # client_logger.info('Проверка на наличие параметра ввода port при инициализации')
         serv_port = int(sys.argv[2])
         if serv_port < 1024 or serv_port > 65535:
             raise ValueError
     except IndexError:
-        #client_logger.debug('Не был введен параметр порта при инициализации, установлены по умолчанию 7777')
+        # client_logger.debug('Не был введен параметр порта при инициализации, установлены по умолчанию 7777')
         serv_port = 7777
     except ValueError:
-        #client_logger.critical(
+        # client_logger.critical(
         #    f'Введен не числовой порт {sys.argv[2]}. '
         #    'В качестве порта может быть указано только число в диапазоне от 1024 до 65535. '
         #    'Поэтому присвоен порт по умолчанию 7777')
         serv_port = 7777
     except TypeError:
-        #client_logger.critical(
+        # client_logger.critical(
         #    f'Введен не верный порт {sys.argv[2]}. '
         #    'В качестве порта может быть указано только число в диапазоне от 1024 до 65535. '
         #    'Поэтому присвоен порт по умолчанию 7777')
@@ -97,7 +98,7 @@ def main():
         client_logger.debug(f'Using USERNAME = {client_name}, PASSWD = {client_passwd}.')
     else:
         exit(0)
-    #print(client_name)
+    # print(client_name)
 
     # Загружаем ключи с файла, если же файла нет, то генерируем новую пару.
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -126,7 +127,7 @@ def main():
     """
     transport = ClientTransport(serv_port, serv_addr, database, client_name, client_passwd, keys)
     transport.daemon = True
-    #transport.setDaemon(True)
+    # transport.setDaemon(True)
     transport.start()
 
     # Удалим объект диалога за ненадобностью
@@ -143,8 +144,5 @@ def main():
     transport.join()
 
 
-
-
 if __name__ == '__main__':
     main()
-

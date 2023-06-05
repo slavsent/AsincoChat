@@ -26,6 +26,9 @@ database_lock = threading.Lock()
 
 # Исключение - ошибка сервера
 class ServerError(Exception):
+    """
+    Класс ошибок сервера
+    """
     def __init__(self, text):
         self.text = text
 
@@ -35,6 +38,10 @@ class ServerError(Exception):
 
 # Класс - Транспорт, отвечает за взаимодействие с сервером
 class ClientTransport(threading.Thread, QObject):
+    """
+    Класс реализующий транспортную подсистему клиентского
+    модуля. Отвечает за взаимодействие с сервером.
+    """
     # Сигналы новое сообщение и потеря соединения
     new_message = pyqtSignal(dict)
     connection_lost = pyqtSignal()
@@ -78,11 +85,19 @@ class ClientTransport(threading.Thread, QObject):
 
     @Log()
     def connection_init(self):
+        """
+        Метод отвечающий за устанновку соединения с сервером.
+        :return:
+        """
+        # Таймаут необходим для освобождения сокета.
         self.sock.settimeout(5)
+
         # проверка metaclass
         # s.listen(5)
         # client, addr = s.accept()
 
+        # Соединяемся, 5 попыток соединения, флаг успеха ставим в True если
+        # удалось
         connected = False
         for i in range(5):
             client_logger.info(f'Попытка подключения №{i + 1}')
@@ -116,11 +131,13 @@ class ClientTransport(threading.Thread, QObject):
         # Получаем публичный ключ и декодируем его из байтов
         pubkey = self.keys.publickey().export_key().decode('ascii')
 
+        # Процесс авторизиции на сервере
         msg = 'Установка соединения'
         data_msg = self.create_msg_for_server(msg, self.username, pubkey)
         msg_jim = json.dumps(data_msg)
         client_logger.info('Сообщение переведено в формат JSON')
 
+        # Отправляем серверу приветственное сообщение.
         with sock_lock:
             try:
                 self.sock.send(msg_jim.encode('utf-8'))
@@ -132,6 +149,7 @@ class ClientTransport(threading.Thread, QObject):
                 data_jim = data.decode('utf-8')
                 data_from_server = json.loads(data_jim)
                 # print(data_from_server)
+                #Проверка сообщения от сервера и если все нормально продолжаем работу
                 if 'response' in data_from_server:
                     if data_from_server['response'] == 400:
                         print(data_from_server)
@@ -166,6 +184,13 @@ class ClientTransport(threading.Thread, QObject):
 
     @Log()
     def create_msg_for_server(self, msg, username, pubkey):
+        """
+        Модуль создания приведственного сообщения для сервера
+        :param msg: сообщение
+        :param username: пользователь
+        :param pubkey: ключ
+        :return: сообщение в ввиде словаря
+        """
         client_logger.debug(f'Сформировано presence сообщение по сообщению клиента: {msg}')
         return {
             'action': 'presence',
@@ -182,6 +207,10 @@ class ClientTransport(threading.Thread, QObject):
     # Функция запроса списка контактов пользовател
     @Log()
     def user_list_request(self):
+        """
+        Метод обновляющий с сервера список пользователей.
+        :return:
+        """
         client_logger.debug(f'Запрос списка известных пользователей')
         data_msg = {
             'action': 'get_users',
@@ -210,6 +239,10 @@ class ClientTransport(threading.Thread, QObject):
     # Функция запроса списка контактов пользователя
     @Log()
     def contacts_list_request(self):
+        """
+        Метод обновляющий с сервера список контактов.
+        :return:
+        """
         client_logger.debug(f'Запрос списка известных пользователей {self.username}')
         data_msg = {
             'action': 'get_contacts',
@@ -240,6 +273,11 @@ class ClientTransport(threading.Thread, QObject):
     # Функция удаления клиента на сервере
     @Log()
     def remove_contact(self, contact):
+        """
+        Метод отправляющий на сервер сведения о удалении контакта.
+        :param contact:
+        :return:
+        """
         client_logger.debug(f'Удаление контакта {contact}')
         with sock_lock:
             try:
@@ -266,6 +304,11 @@ class ClientTransport(threading.Thread, QObject):
     # Функция сообщающая на сервер о добавлении нового контакта
     @Log()
     def add_contact(self, contact):
+        """
+        Метод отправляющий на сервер сведения о добавлении контакта.
+        :param contact:
+        :return:
+        """
         with sock_lock:
             try:
                 data_msg = {
@@ -291,6 +334,10 @@ class ClientTransport(threading.Thread, QObject):
     # Функция закрытия соединения, отправляет сообщение о выходе.
     @Log()
     def transport_shutdown(self):
+        """
+        Метод уведомляющий сервер о завершении работы клиента.
+        :return:
+        """
         self.running = False
         with sock_lock:
             data_msg = {
@@ -317,6 +364,12 @@ class ClientTransport(threading.Thread, QObject):
     # Функция отправки сообщения на сервер
     @Log()
     def send_message(self, to_user, message):
+        """
+        Модуль отправки сообщения контакту
+        :param to_user: контакт
+        :param message: сообщение
+        :return:
+        """
         time_send = datetime.datetime.now().timestamp()
         # time_send_db = datetime.datetime.now()
         message_dict = {
@@ -355,6 +408,10 @@ class ClientTransport(threading.Thread, QObject):
 
     @Log()
     def run(self):
+        """
+        Метод содержащий основной цикл работы транспортного потока.
+        :return:
+        """
         client_logger.debug('Запущен процесс - приёмник собщений с сервера.')
         while self.running:
             # Отдыхаем секунду и снова пробуем захватить сокет.
@@ -398,6 +455,11 @@ class ClientTransport(threading.Thread, QObject):
     # Функция обрабатывающяя сообщения от сервера. Ничего не возращает. Генерирует исключение при ошибке.
     @Log()
     def process_server_ans(self, message):
+        """
+        Метод обработчик поступающих сообщений с сервера.
+        :param message:
+        :return:
+        """
         client_logger.debug(f'Разбор сообщения от сервера: {message}')
 
         # Если это подтверждение чего-либо
