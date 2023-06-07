@@ -3,6 +3,7 @@ from sqlalchemy import create_engine, Column, Integer, String, MetaData, Foreign
 # from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import default_comparator
 
 BASE = declarative_base()
 
